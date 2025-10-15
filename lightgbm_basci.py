@@ -422,6 +422,9 @@ def main():
     X_train_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_train_processed))
     X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))
     X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))
+
+    X_train_enhanced.to_csv('X_train_enhanced.csv', index=False)
+    X_test_enhanced.to_csv('X_test_enhanced.csv', index=False)
     
     # Feature selection
     print("\n6. Feature selection...")
