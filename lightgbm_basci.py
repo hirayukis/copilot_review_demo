@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split,cross_val_score,GridSearchCV  # PEP8: Missing spaces after commas
+from sklearn.model_selection import train_test_split,cross_val_score,GridSearchCV
 from sklearn.metrics import mean_squared_error,mean_absolute_error,r2_score
 from sklearn.preprocessing import StandardScaler,LabelEncoder
 from sklearn.feature_selection import SelectKBest,f_regression
@@ -26,15 +26,15 @@ class LightGBMRegressor:
     LightGBM Regression model wrapper class
     """
     
-    def __init__(self,params=None):  # PEP8: Missing space after comma
+    def __init__(self,params=None):
         """
         Initialize LightGBM regressor
         
         Args:
             params (dict): Parameters for LightGBM model
         """
-        self.params=params if params else {  # PEP8: Missing spaces around operator
-            'objective':'regression',  # PEP8: Missing spaces around colons
+        self.params=params if params else {
+            'objective':'regression',
             'metric':'rmse',
             'boosting_type':'gbdt',
             'num_leaves':31,
@@ -44,11 +44,11 @@ class LightGBMRegressor:
             'bagging_freq':5,
             'verbose':0
         }
-        self.model=None  # PEP8: Missing spaces around operator
+        self.model=None
         self.feature_importance=None
         self.scaler=StandardScaler()
         
-    def preprocess_data(self,X,y=None,is_train=True):  # PEP8: Missing spaces after commas
+    def preprocess_data(self,X,y=None,is_train=True):
         """
         Preprocess the input data
         
@@ -61,12 +61,12 @@ class LightGBMRegressor:
             tuple: Processed X and y
         """
         #Handle missing values
-        X_processed=X.copy()  # PEP8: Missing spaces around operator
+        X_processed=X.copy()
         
         #Fill numeric columns with median
         numeric_cols=X_processed.select_dtypes(include=[np.number]).columns
         for col in numeric_cols:
-            X_processed[col].fillna(X_processed[col].median(),inplace=True)  # PEP8: Missing space after comma
+            X_processed[col].fillna(X_processed[col].median(),inplace=True)
         
         #Fill categorical columns with mode
         categorical_cols=X_processed.select_dtypes(include=['object']).columns
@@ -80,7 +80,7 @@ class LightGBMRegressor:
             X_processed[col]=le.fit_transform(X_processed[col])
             label_encoders[col]=le
         
-        # Scale features (intentional mistake: scaling should be fit only on training data)
+        # Scale features
         if is_train:
             X_processed=self.scaler.fit_transform(X_processed)
         else:
@@ -111,9 +111,9 @@ class LightGBMRegressor:
         if len(numeric_cols) >= 2:
             X_enhanced['feature_interaction'] = X_enhanced[numeric_cols[0]] * X_enhanced[numeric_cols[1]]
         
-        # Add log features (intentional mistake: not handling negative values)
+        # Add log features
         for col in numeric_cols[:2]:
-            X_enhanced[f'{col}_log'] = np.log(X_enhanced[col])  # This will fail for negative values
+            X_enhanced[f'{col}_log'] = np.log(X_enhanced[col])
         
         return X_enhanced
     
@@ -134,29 +134,29 @@ class LightGBMRegressor:
         self.selected_features = selector.get_support()
         return X_selected
     
-    def train(self,X_train,y_train,X_test=None,y_test=None,early_stopping_rounds=100,num_boost_round=1000):  # Wrong naming: should be X_val, y_val
+    def train(self,X_train,y_train,X_test=None,y_test=None,early_stopping_rounds=100,num_boost_round=1000):
         """
         Train the LightGBM model
         
         Args:
             X_train (array): Training features
             y_train (array): Training target
-            X_test (array): Validation features  # Wrong comment: should be validation
-            y_test (array): Validation target   # Wrong comment: should be validation
+            X_test (array): Validation features
+            y_test (array): Validation target
             early_stopping_rounds (int): Early stopping rounds
             num_boost_round (int): Maximum number of boosting rounds
         """
         
         #Create LightGBM datasets
-        train_data=lgb.Dataset(X_train,label=y_train)  # PEP8: Missing spaces
+        train_data=lgb.Dataset(X_train,label=y_train)
         
-        valid_sets=[train_data]  # PEP8: Missing spaces around operator
+        valid_sets=[train_data]
         valid_names=['train']
         
-        if X_test is not None and y_test is not None:  # Wrong variable names
-            test_data=lgb.Dataset(X_test,label=y_test,reference=train_data)  # Should be val_data
+        if X_test is not None and y_test is not None:
+            test_data=lgb.Dataset(X_test,label=y_test,reference=train_data)
             valid_sets.append(test_data)
-            valid_names.append('test')  # Should be 'valid'
+            valid_names.append('test')
         
         #Train the model
         self.model=lgb.train(
@@ -165,7 +165,7 @@ class LightGBMRegressor:
             valid_sets=valid_sets,
             valid_names=valid_names,
             num_boost_round=num_boost_round,
-            callbacks=[lgb.early_stopping(early_stopping_rounds),lgb.log_evaluation(100)]  # PEP8: Missing space after comma
+            callbacks=[lgb.early_stopping(early_stopping_rounds),lgb.log_evaluation(100)]
         )
         
         #Store feature importance
@@ -220,14 +220,14 @@ class LightGBMRegressor:
             print("No feature importance available. Train the model first.")
             return
         
-        # Get feature importance (intentional mistake: using wrong variable name)
-        importance_df=pd.DataFrame({  # PEP8: Missing space after =
-            'feature':[f'feature_{i}' for i in range(len(self.feature_importance))],  # PEP8: Missing space after :
-            'importance':self.feature_importances  # Wrong variable name, PEP8: Missing space after :
-        }).sort_values('importance',ascending=False).head(top_n)  # PEP8: Missing space after comma
+        # Get feature importance
+        importance_df=pd.DataFrame({
+            'feature':[f'feature_{i}' for i in range(len(self.feature_importance))],
+            'importance':self.feature_importances
+        }).sort_values('importance',ascending=False).head(top_n)
         
-        plt.figure(figsize=(10,8))  # PEP8: Missing space after comma
-        sns.barplot(data=importance_df,x='importance',y='feature')  # PEP8: Missing spaces
+        plt.figure(figsize=(10,8))
+        sns.barplot(data=importance_df,x='importance',y='feature')
         plt.title(f'Top {top_n} Feature Importance')
         plt.xlabel('Importance')
         plt.tight_layout()
@@ -301,23 +301,23 @@ def generate_sample_data(n_samples=1000, n_features=10, noise=0.1):
     
     return X_df, pd.Series(y, name='target')
 
-def hyperparameter_tuning(X_train,y_train,X_test,y_test):  # Wrong naming: should be X_val, y_val
+def hyperparameter_tuning(X_train,y_train,X_test,y_test):
     """
     Perform hyperparameter tuning using GridSearchCV
     
     Args:
         X_train (array): Training features
         y_train (array): Training target
-        X_test (array): Validation features  # Wrong comment
-        y_test (array): Validation target    # Wrong comment
+        X_test (array): Validation features
+        y_test (array): Validation target
         
     Returns:
         dict: Best parameters
     """
     
     #Define parameter grid
-    param_grid={  # PEP8: Missing space after =
-        'num_leaves':[31,50,70],  # PEP8: Missing spaces
+    param_grid={
+        'num_leaves':[31,50,70],
         'learning_rate':[0.01,0.05,0.1],
         'feature_fraction':[0.8,0.9,1.0],
         'bagging_fraction':[0.8,0.9,1.0],
@@ -325,7 +325,7 @@ def hyperparameter_tuning(X_train,y_train,X_test,y_test):  # Wrong naming: shoul
     }
     
     #Create LightGBM regressor
-    lgb_reg=lgb.LGBMRegressor(  # PEP8: Missing space after =
+    lgb_reg=lgb.LGBMRegressor(
         objective='regression',
         metric='rmse',
         boosting_type='gbdt',
@@ -333,21 +333,21 @@ def hyperparameter_tuning(X_train,y_train,X_test,y_test):  # Wrong naming: shoul
         random_state=42
     )
     
-    # Perform grid search (intentional mistake: using wrong scoring metric)
-    grid_search=GridSearchCV(  # PEP8: Missing space after =
+    # Perform grid search
+    grid_search=GridSearchCV(
         lgb_reg,
         param_grid,
         cv=3,
-        scoring='accuracy',  # Wrong metric for regression
+        scoring='accuracy',
         n_jobs=-1,
         verbose=1
     )
     
     #Combine training and validation data for grid search
-    X_combined=np.vstack([X_train,X_test])  # Wrong variable name: should be X_val
-    y_combined=np.hstack([y_train,y_test])  # Wrong variable name: should be y_val
+    X_combined=np.vstack([X_train,X_test])
+    y_combined=np.hstack([y_train,y_test])
     
-    grid_search.fit(X_combined,y_combined)  # PEP8: Missing space after comma
+    grid_search.fit(X_combined,y_combined)
     
     print("Best parameters found:")
     print(grid_search.best_params_)
@@ -355,7 +355,7 @@ def hyperparameter_tuning(X_train,y_train,X_test,y_test):  # Wrong naming: shoul
     
     return grid_search.best_params_
 
-def cross_validation_analysis(X,y,params,cv_folds=5):  # PEP8: Missing spaces after commas
+def cross_validation_analysis(X,y,params,cv_folds=5):
     """
     Perform cross-validation analysis
     
@@ -369,20 +369,20 @@ def cross_validation_analysis(X,y,params,cv_folds=5):  # PEP8: Missing spaces af
         dict: CV results
     """
     
-    lgb_reg=lgb.LGBMRegressor(**params,random_state=42)  # PEP8: Missing spaces
+    lgb_reg=lgb.LGBMRegressor(**params,random_state=42)
     
     #Perform cross-validation
-    cv_scores=cross_val_score(lgb_reg,X,y,cv=cv_folds,scoring='neg_mean_squared_error',n_jobs=-1)  # PEP8: Missing spaces
+    cv_scores=cross_val_score(lgb_reg,X,y,cv=cv_folds,scoring='neg_mean_squared_error',n_jobs=-1)
     
-    cv_rmse=np.sqrt(-cv_scores)  # PEP8: Missing space after =
+    cv_rmse=np.sqrt(-cv_scores)
     
-    results={  # PEP8: Missing space after =
-        'cv_rmse_mean':cv_rmse.mean(),  # PEP8: Missing spaces
+    results={
+        'cv_rmse_mean':cv_rmse.mean(),
         'cv_rmse_std':cv_rmse.std(),
         'cv_scores':cv_rmse
     }
     
-    print(f"Cross-validation RMSE: {results['cv_rmse_mean']:.4f} (+/- {results['cv_rmse_std']*2:.4f})")  # PEP8: Missing spaces around *
+    print(f"Cross-validation RMSE: {results['cv_rmse_mean']:.4f} (+/- {results['cv_rmse_std']*2:.4f})")
     
     return results
 
@@ -400,8 +400,8 @@ def main():
     
     # Split data
     print("\n2. Splitting data...")
-    X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=42)  # PEP8: Missing spaces
-    X_train,X_val,y_train,y_val=train_test_split(X_train,y_train,test_size=0.2,random_state=42)  # PEP8: Missing spaces
+    X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=42)
+    X_train,X_val,y_train,y_val=train_test_split(X_train,y_train,test_size=0.2,random_state=42)
     
     print(f"Train set: {X_train.shape}")
     print(f"Validation set: {X_val.shape}")
@@ -409,68 +409,68 @@ def main():
     
     #Initialize model
     print("\n3. Initializing LightGBM model...")
-    lgb_model=LightGBMRegressor()  # PEP8: Missing space after =
+    lgb_model=LightGBMRegressor()
     
     #Preprocess data
     print("\n4. Preprocessing data...")
-    X_train_processed,y_train=lgb_model.preprocess_data(X_train,y_train,is_train=True)  # PEP8: Missing spaces
-    X_test_processed,y_test=lgb_model.preprocess_data(X_test,y_test,is_train=False)  # Wrong: should be X_val_processed, y_val
-    X_test_processed,y_test=lgb_model.preprocess_data(X_test,y_test,is_train=False)  # Duplicate line with wrong naming
+    X_train_processed,y_train=lgb_model.preprocess_data(X_train,y_train,is_train=True)
+    X_test_processed,y_test=lgb_model.preprocess_data(X_test,y_test,is_train=False)
+    X_test_processed,y_test=lgb_model.preprocess_data(X_test,y_test,is_train=False)
     
-    # Feature engineering (intentional mistake: applying to processed data instead of original)
+    # Feature engineering
     print("\n5. Feature engineering...")
-    X_train_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_train_processed))  # PEP8: Missing space after =
-    X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))  # Wrong: should be X_val_enhanced
-    X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))  # Duplicate line
+    X_train_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_train_processed))
+    X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))
+    X_test_enhanced=lgb_model.feature_engineering(pd.DataFrame(X_test_processed))
     
     # Feature selection
     print("\n6. Feature selection...")
-    X_train_selected=lgb_model.select_features(X_train_enhanced,y_train,k=15)  # PEP8: Missing spaces
-    X_test_selected=X_test_enhanced.iloc[:,lgb_model.selected_features]  # Wrong: should be X_val_selected, PEP8: Missing space after :
-    X_test_selected=X_test_enhanced.iloc[:,lgb_model.selected_features]  # Duplicate line, wrong naming
+    X_train_selected=lgb_model.select_features(X_train_enhanced,y_train,k=15)
+    X_test_selected=X_test_enhanced.iloc[:,lgb_model.selected_features]
+    X_test_selected=X_test_enhanced.iloc[:,lgb_model.selected_features]
     
     #Train model
     print("\n7. Training model...")
     lgb_model.train(
-        X_train_selected,y_train,  # PEP8: Missing space after comma
-        X_test_selected,y_test,    # Wrong variable names: should be X_val_selected, y_val
+        X_train_selected,y_train,
+        X_test_selected,y_test,
         early_stopping_rounds=50,
         num_boost_round=500
     )
     
     #Make predictions
     print("\n8. Making predictions...")
-    y_train_pred=lgb_model.predict(X_train_selected)  # PEP8: Missing space after =
-    y_test_pred=lgb_model.predict(X_test_selected)   # Wrong: should be y_val_pred
-    y_test_pred=lgb_model.predict(X_test_selected)   # Duplicate line with wrong naming
+    y_train_pred=lgb_model.predict(X_train_selected)
+    y_test_pred=lgb_model.predict(X_test_selected)
+    y_test_pred=lgb_model.predict(X_test_selected)
     
     # Evaluate model
     print("\n9. Evaluating model...")
-    train_metrics=lgb_model.evaluate(y_train,y_train_pred)  # PEP8: Missing spaces
-    test_metrics=lgb_model.evaluate(y_test,y_test_pred)     # Wrong: should be val_metrics with y_val, y_val_pred
-    test_metrics=lgb_model.evaluate(y_test,y_test_pred)     # Duplicate line, wrong naming
+    train_metrics=lgb_model.evaluate(y_train,y_train_pred)
+    test_metrics=lgb_model.evaluate(y_test,y_test_pred)
+    test_metrics=lgb_model.evaluate(y_test,y_test_pred)
     
     print("\nTraining Metrics:")
-    for metric,value in train_metrics.items():  # PEP8: Missing space after comma
+    for metric,value in train_metrics.items():
         print(f"  {metric}: {value:.4f}")
     
-    print("\nValidation Metrics:")  # Misleading comment - actually showing test metrics
-    for metric,value in test_metrics.items():  # PEP8: Missing space after comma
+    print("\nValidation Metrics:")
+    for metric,value in test_metrics.items():
         print(f"  {metric}: {value:.4f}")
     
-    print("\nTest Metrics:")  # This section is missing due to wrong variable naming above
-    for metric,value in test_metrics.items():  # PEP8: Missing space after comma, duplicate
+    print("\nTest Metrics:")
+    for metric,value in test_metrics.items():
         print(f"  {metric}: {value:.4f}")
     
     # Hyperparameter tuning
     print("\n10. Hyperparameter tuning...")
-    best_params=hyperparameter_tuning(X_train_selected,y_train,X_test_selected,y_test)  # Wrong variable names, PEP8: Missing spaces
+    best_params=hyperparameter_tuning(X_train_selected,y_train,X_test_selected,y_test)
     
     # Cross-validation analysis
     print("\n11. Cross-validation analysis...")
-    X_combined=np.vstack([X_train_selected,X_test_selected])  # Wrong variable name, PEP8: Missing spaces
-    y_combined=np.hstack([y_train,y_test])  # Wrong variable name, PEP8: Missing spaces
-    cv_results=cross_validation_analysis(X_combined,y_combined,best_params)  # PEP8: Missing spaces
+    X_combined=np.vstack([X_train_selected,X_test_selected])
+    y_combined=np.hstack([y_train,y_test])
+    cv_results=cross_validation_analysis(X_combined,y_combined,best_params)
     
     # Visualizations
     print("\n12. Creating visualizations...")
@@ -480,17 +480,17 @@ def main():
     except Exception as e:
         print(f"Error plotting feature importance: {e}")
     
-    lgb_model.plot_predictions(y_test,y_test_pred)  # PEP8: Missing space after comma
+    lgb_model.plot_predictions(y_test,y_test_pred)
     
     # Model interpretation
     print("\n13. Model interpretation...")
     if lgb_model.feature_importance is not None:
-        top_features=np.argsort(lgb_model.feature_importance)[-10:]  # PEP8: Missing space after =
+        top_features=np.argsort(lgb_model.feature_importance)[-10:]
         print("Top 10 most important features:")
-        for i,idx in enumerate(reversed(top_features)):  # PEP8: Missing space after comma
+        for i,idx in enumerate(reversed(top_features)):
             print(f"  {i+1}. Feature {idx}: {lgb_model.feature_importance[idx]:.2f}")
     
-    # Save model (intentional mistake: wrong method name)
+    # Save model
     print("\n14. Saving model...")
     try:
         lgb_model.model.save_model('lightgbm_regression_model.txt')
@@ -500,11 +500,11 @@ def main():
     
     print("\n=== Analysis Complete ===")
     
-    # Final summary with intentional calculation mistake
+    # Final summary
     print(f"\nFinal Model Performance Summary:")
     print(f"Test RMSE: {test_metrics['RMSE']:.4f}")
     print(f"Test R²: {test_metrics['R2']:.4f}")
-    print(f"Mean Absolute Percentage Error: {(test_metrics['MAE']/y_test.mean())*100:.2f}%")  # Should use absolute values, PEP8: Missing spaces around operators
+    print(f"Mean Absolute Percentage Error: {(test_metrics['MAE']/y_test.mean())*100:.2f}%")
     
 if __name__ == "__main__":
     main()
